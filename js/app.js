@@ -260,38 +260,59 @@ function feed() {
   });
 
   function addPost(a) {
-    addpostmodal[0].style.display = "none"; 
+    addpostmodal[0].style.display = "none";
     bgblur.style.display = "none";
+    
     let postform = `<div class="post">
-    <div class="addfirstrowinmodal">
-      <div class="useravatarinmodal">
-        <img src="./img/img.jpg" alt="" />
-      </div>
-      <div class="pmodalnames">
-        <div class="postmnames">
-          <div class="fNameP">${localStorage.getItem("fname")}</div>
-          <div class="lnameP">${localStorage.getItem("lname")}</div>
+      <div class="addfirstrowinmodal">
+        <div class="useravatarinmodal">
+          <img src="./img/img.jpg" alt="" />
         </div>
-        <div id="postdetails">
-          <div id="postdate">${myDate}</div>
-          · <img src="./img/earth.png" alt="earth" />
+        <div class="pmodalnames">
+          <div class="postmnames">
+            <div class="fNameP">${localStorage.getItem("fname")}</div>
+            <div class="lnameP">${localStorage.getItem("lname")}</div>
+          </div>
+          <div id="postdetails">
+            <div id="postdate">${myDate}</div>
+            · <img src="./img/earth.png" alt="earth" />
+          </div>
         </div>
       </div>
-    </div>
-
-    <div class="posttext">${modaltextarea.value}</div>
-    <img
-      src="${imglink.value}"
-      id="postimg"
-    />
-
-    <div class="postfooter">
+  
+      <div class="posttext">${modaltextarea.value}</div>`;
+      
+    
+    if (imglink.files && imglink.files[0]) {
+      
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        postform += `<img src="${e.target.result}" id="postimg" />`;
+        postform += generatePostFooter(a); 
+        postform += `</div>`;
+        localStorage.setItem(a, postform);
+        window.location.reload();
+      }
+      reader.readAsDataURL(imglink.files[0]);
+    } else {
+      
+      postform += generatePostFooter(a); 
+      postform += `</div>`;
+      localStorage.setItem(a, postform);
+      window.location.reload();
+    }
+  }
+  
+  function generatePostFooter(postId) {
+    
+    let likeCount = localStorage.getItem(`like_${postId}`) || 0;
+    let postfooter = `<div class="postfooter">
       <div class="postfot1">
         <div class="likebut">
           <img src="./img/likebut.png" alt="like" />
-          <p class="${like}">${likenum}<p>
+          <p class="${like}">${likeCount}</p>
         </div>
-
+  
         <div class="comshar">
           <span
             ><div class="comcount">0</div>
@@ -312,7 +333,7 @@ function feed() {
         <button><img src="./img/shareb.png" alt="share" />share</button>
       </div>
       <hr style="opacity: 0.6" />
-
+  
       <div class="comsection">
         <li id="avatarsection">
           <img src="./img/img.jpg" alt="avatar" id="avatar" />
@@ -320,10 +341,8 @@ function feed() {
         </li>
         <input type="text" placeholder="Write a comment..." />
       </div>
-    </div>
-  </div>`;
-    localStorage.setItem(a, postform);
-    window.location.reload();
+    </div>`;
+    return postfooter;
   }
 
   submitpost.addEventListener("click", () => {
@@ -338,6 +357,21 @@ function feed() {
       modaltextarea.classList.add("red-placeholder");
     }
   });
+
+  function updateLikeCount(postId, likeCount) {
+    let likeCountElement = document.querySelector(`.${likeCount}`);
+    likeCountElement.textContent = likeCount;
+  }
+
+  function handleLikeButtonClick(postId, likeCount) {
+    let likeButton = document.querySelector(`.${createid}`);
+    likeButton.addEventListener("click", () => {
+      let currentLikeCount = localStorage.getItem(`like_${postId}`) || 0;
+      let newLikeCount = parseInt(currentLikeCount) + 1;
+      localStorage.setItem(`like_${postId}`, newLikeCount);
+      updateLikeCount(postId, newLikeCount);
+    });
+  }
 
   function pushPostinFeed() {
     let numbersArray = [];
@@ -355,6 +389,7 @@ function feed() {
     for (let i = 0; i < numbersArray.length; i++) {
       let currentNumber = numbersArray[i];
       newsfeed[0].innerHTML += localStorage.getItem(currentNumber);
+      handleLikeButtonClick(currentNumber);
     }
   }
 
